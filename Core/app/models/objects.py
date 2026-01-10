@@ -29,7 +29,7 @@ class UpdateObjectModel(BaseModel):
 
 class ImportObjectsModel(BaseModel):
     module_name: str
-    content: str
+    content: dict
 
 
 class ExportObjectsModel(BaseModel):

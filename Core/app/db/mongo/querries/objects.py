@@ -76,7 +76,7 @@ def list_objects(obj: ListObjectsModel, conn: pymongo.MongoClient) -> list:
     return list(cursor)
 
 
-def export_objects(obj: ExportObjectsModel, conn: pymongo.MongoClient) -> str:
+def export_objects(obj: ExportObjectsModel, conn: pymongo.MongoClient) -> dict:
     """
     Exports all collections from a specific module into one JSON string.
     Format: { "collection_1": [...], "collection_2": [...] }
@@ -103,17 +103,16 @@ def export_objects(obj: ExportObjectsModel, conn: pymongo.MongoClient) -> str:
 
         export_data[col_name] = docs
 
-    return json.dumps(export_data, indent=4)
+    return export_data
 
 
 def import_objects(obj: ImportObjectsModel, conn: pymongo.MongoClient) -> None:
     """
-    Imports a whole module's data. Collection names are derived from the JSON keys.
+    Imports a whole module's data.
+    Collection names are derived automatically from the JSON dictionary keys.
     """
-    try:
-        data = json.loads(obj.content)
-    except json.JSONDecodeError:
-        raise Exception("Invalid JSON content provided for import")
+    # obj.content is already a dict thanks to Pydantic
+    data = obj.content
 
     if not isinstance(data, dict):
         raise Exception("Import content must be a dictionary of collections")
@@ -123,8 +122,9 @@ def import_objects(obj: ImportObjectsModel, conn: pymongo.MongoClient) -> None:
     for col_name, docs in data.items():
         collection = db[col_name]
         for doc in docs:
+            # We use the object path/identifier as the _id
             if "_id" in doc:
-                # Use replace_one with upsert to avoid duplicate errors on re-import
+                # replace_one + upsert=True acts as a "Create or Update"
                 collection.replace_one({"_id": doc["_id"]}, doc, upsert=True)
             else:
                 collection.insert_one(doc)

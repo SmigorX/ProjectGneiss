@@ -61,9 +61,7 @@ async def fetch_object(obj: GetObjectModel):
 async def import_object(obj: ImportObjectsModel):
     try:
         import_objects(obj)
-        return {
-            "message": f"Objects imported successfully into {obj.module_name}/{obj.collection_name}"
-        }
+        return {"message": f"Objects imported successfully into {obj.module_name}"}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 

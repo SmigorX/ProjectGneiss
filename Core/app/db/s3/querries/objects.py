@@ -108,7 +108,7 @@ def list_objects(obj: ListObjectsModel, s3_client: boto3.client) -> list:
     return objects
 
 
-def export_objects(obj: ExportObjectsModel, s3_client: boto3.client) -> str:
+def export_objects(obj: ExportObjectsModel, s3_client: boto3.client) -> dict:
     bucket_name = get_s3_bucket()
     prefix = f"modules/{obj.module_name}/"
     export_data = {}
@@ -135,27 +135,27 @@ def export_objects(obj: ExportObjectsModel, s3_client: boto3.client) -> str:
 
             export_data[col_name].append(doc)
 
-    return json.dumps(export_data, indent=4)
+    return export_data
 
 
 def import_objects(obj: ImportObjectsModel, s3_client: boto3.client) -> None:
+    """
+    Imports a whole module's data into S3.
+    """
     bucket_name = get_s3_bucket()
-    try:
-        data = json.loads(obj.content)
-    except json.JSONDecodeError:
-        raise Exception("Invalid JSON content provided for S3 import")
+    data = obj.content
 
     if not isinstance(data, dict):
         raise Exception("Import content must be a dictionary of collections")
 
     for col_name, docs in data.items():
         for doc in docs:
-            # Determine filename from path or _id
+            # Reconstruct the S3 key
             obj_path = doc.get("path") or doc.get("_id")
             if not obj_path:
                 continue
 
-            # _get_key helper uses: modules/{module}/{collection}/{path}.json
+            # Uses helper to create: modules/{module}/{collection}/{path}.json
             key = _get_key(obj.module_name, col_name, obj_path)
 
             s3_client.put_object(

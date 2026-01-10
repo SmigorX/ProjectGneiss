@@ -14,3 +14,13 @@ def register_module(module: ModuleModel, conn: pymongo.MongoClient) -> None:
 
     print(f"Module {module.module_name} registered successfully")
     return
+
+
+def list_modules(conn: pymongo.MongoClient) -> list[ModuleModel]:
+    db = conn["gneiss_database"]
+    collection = db["registered_modules"]
+
+    modules_cursor = collection.find({})
+    modules = [ModuleModel(**doc) for doc in modules_cursor]
+
+    return modules
