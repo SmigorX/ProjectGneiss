@@ -1,0 +1,21 @@
+services:
+    mongo:
+        image: mongo:latest
+        container_name: mongo_container
+        ports:
+            - "27017:27017"
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: root
+            MONGO_INITDB_ROOT_PASSWORD: example
+
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: app_core
+        ports:
+            - "8000:8000"
+        depends_on:
+            - mongo
+        environment:
+            MONGO_URL: mongodb://root:example@mongo:27017/
