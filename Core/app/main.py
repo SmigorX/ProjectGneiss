@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -7,27 +8,33 @@ from api.modules import router as modules_router
 from api.objects import router as objects_router
 from db.mongo.connection import get_mongo_client
 from db.s3.connection import get_s3_client
+from logger import log_debug, log_error, log_info, start_logger
 
 app = fastapi.FastAPI()
 
 
 def main():
+    start_logger()
+    log_debug("Connecting to S3")
     s3_client = get_s3_client()
+    log_debug("Connecting to MongoDB")
     mongo_client = get_mongo_client()
 
     if s3_client:
-        print("S3 client initialized successfully.")
+        log_info("S3 client initialized successfully.")
 
     if mongo_client:
-        print("MongoDB client initialized successfully.")
+        log_info("MongoDB client initialized successfully.")
 
     if not s3_client and not mongo_client:
-        print("No storage clients could be initialized.")
+        log_error("No storage backend configured. Exiting application.")
         sys.exit(1)
 
+    log_debug("Registering API routes")
     app.include_router(modules_router)
+    log_debug("Modules router registered")
     app.include_router(objects_router)
-    print("API routes registered successfully.")
+    log_debug("Objects router registered")
 
     port = int(os.getenv("PORT", 8000))
 

@@ -4,10 +4,12 @@ from db.mongo.querries.modules import register_module as mongo_register_module
 from db.s3.connection import get_s3_client
 from db.s3.querries.modules import list_modules as s3_list_modules
 from db.s3.querries.modules import register_module as s3_register_module
+from logger import log_debug, log_error, log_info
 from models.modules import ModuleModel
 
 
 def register_module(module: ModuleModel):
+    log_debug(f"Starting registration for module: {module.module_name}")
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -18,11 +20,12 @@ def register_module(module: ModuleModel):
             s3_register_module(module, s3_storage)
 
     except Exception as e:
-        print(f"Error registering module: {e}")
+        log_error(f"Error registering module: {str(e)}")
         raise e
 
 
 def list_modules():
+    log_debug("Starting to list registered modules")
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -35,7 +38,7 @@ def list_modules():
             modules = s3_list_modules(s3_storage)
 
     except Exception as e:
-        print(f"Error listing modules: {e}")
+        log_error(f"Error listing modules: {str(e)}")
         raise e
 
     return modules

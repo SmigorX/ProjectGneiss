@@ -3,6 +3,7 @@ import json
 
 import boto3
 from db.s3.connection import get_s3_bucket
+from logger import log_debug, log_error, log_info
 from models.objects import (
     CreateObjectModel,
     DeleteObjectModel,
@@ -16,19 +17,33 @@ from models.objects import (
 
 def _get_key(module: str, collection: str, path: str) -> str:
     """Helper to generate consistent S3 keys."""
+    log_debug(
+        f"Generating S3 key for module: {module}, collection: {collection}, path: {path}"
+    )
     clean_path = path.strip("/")
     return f"modules/{module}/{collection}/{clean_path}.json"
 
 
 def create_object(obj: CreateObjectModel, s3_client: boto3.client) -> None:
+    log_debug(
+        f"Creating object in S3: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     bucket_name = get_s3_bucket()
     key = _get_key(obj.module_name, obj.collection_name, obj.object_path)
 
     try:
         s3_client.head_object(Bucket=bucket_name, Key=key)
+        log_error(f"Object at {obj.object_path} already exists in S3")
         raise Exception(f"Object at {obj.object_path} already exists in S3")
     except s3_client.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] == "404":
+            log_debug(
+                f"Object at {obj.object_path} does not exist in S3, proceeding to create"
+            )
         if e.response["Error"]["Code"] != "404":
+            log_error(
+                f"Error checking existence of object at {obj.object_path} in S3: {str(e)}"
+            )
             raise e
 
     data = {
@@ -46,6 +61,9 @@ def create_object(obj: CreateObjectModel, s3_client: boto3.client) -> None:
 
 
 def delete_object(obj: DeleteObjectModel, s3_client: boto3.client) -> None:
+    log_debug(
+        f"Deleting object in S3: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     bucket_name = get_s3_bucket()
     key = _get_key(obj.module_name, obj.collection_name, obj.object_path)
 
@@ -53,10 +71,14 @@ def delete_object(obj: DeleteObjectModel, s3_client: boto3.client) -> None:
         s3_client.head_object(Bucket=bucket_name, Key=key)
         s3_client.delete_object(Bucket=bucket_name, Key=key)
     except s3_client.exceptions.ClientError:
+        log_error(f"Object at {obj.object_path} not found in S3")
         raise Exception(f"Object at {obj.object_path} not found in S3")
 
 
 def update_object(obj: UpdateObjectModel, s3_client: boto3.client) -> None:
+    log_debug(
+        f"Updating object in S3: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     bucket_name = get_s3_bucket()
     key = _get_key(obj.module_name, obj.collection_name, obj.object_path)
 
@@ -75,10 +97,14 @@ def update_object(obj: UpdateObjectModel, s3_client: boto3.client) -> None:
             ContentType="application/json",
         )
     except s3_client.exceptions.ClientError:
+        log_error(f"Object at {obj.object_path} not found in S3")
         raise Exception(f"Object at {obj.object_path} not found in S3")
 
 
 def get_object(obj: GetObjectModel, s3_client: boto3.client) -> dict:
+    log_debug(
+        f"Getting object from S3: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     bucket_name = get_s3_bucket()
     key = _get_key(obj.module_name, obj.collection_name, obj.object_path)
 
@@ -86,10 +112,14 @@ def get_object(obj: GetObjectModel, s3_client: boto3.client) -> dict:
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
         return json.loads(response["Body"].read().decode("utf-8"))
     except s3_client.exceptions.ClientError:
+        log_error(f"Object at {obj.object_path} not found in S3")
         raise Exception(f"Object at {obj.object_path} not found in S3")
 
 
 def list_objects(obj: ListObjectsModel, s3_client: boto3.client) -> list:
+    log_debug(
+        f"Listing objects in S3: module={obj.module_name}, collection={obj.collection_name}"
+    )
     bucket_name = get_s3_bucket()
     prefix = f"modules/{obj.module_name}/{obj.collection_name}/"
 
@@ -109,6 +139,7 @@ def list_objects(obj: ListObjectsModel, s3_client: boto3.client) -> list:
 
 
 def export_objects(obj: ExportObjectsModel, s3_client: boto3.client) -> dict:
+    log_debug(f"Exporting objects from S3 for module: {obj.module_name}")
     bucket_name = get_s3_bucket()
     prefix = f"modules/{obj.module_name}/"
     export_data = {}
@@ -142,6 +173,7 @@ def import_objects(obj: ImportObjectsModel, s3_client: boto3.client) -> None:
     """
     Imports a whole module's data into S3.
     """
+    log_debug(f"Importing objects into S3 for module: {obj.module_name}")
     bucket_name = get_s3_bucket()
     data = obj.content
 

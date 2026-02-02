@@ -19,3 +19,9 @@ services:
             - mongo
         environment:
             MONGO_URL: mongodb://root:example@mongo:27017/
+            S3_ACCESS_KEY_ID: 22BBXDJQDGWOGJ7S83UP
+            S3_SECRET_ACCESS_KEY: 2cESIPWRoGIv059PNNuQ9JDrCflFvkUnk9djLAgD
+            S3_REGION: eu-east-1
+            S3_BUCKET_NAME: gneiss-state
+            S3_ENDPOINT_URL: http://s3.internal.wmsdev.pl:7480
+            LOG_LEVEL: DEBUG

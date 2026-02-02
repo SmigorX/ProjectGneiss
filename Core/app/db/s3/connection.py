@@ -1,6 +1,7 @@
 import os
 
 import boto3
+from logger import log_debug, log_error, log_info
 
 s3_client = None
 s3_bucket = None
@@ -22,8 +23,10 @@ def get_s3_client() -> boto3.client:
         s3_secret_key = os.getenv("S3_SECRET_ACCESS_KEY")
         s3_region = os.getenv("S3_REGION")
         s3_bucket = os.getenv("S3_BUCKET_NAME")
+        s3_endpoint = os.getenv("S3_ENDPOINT_URL")
 
-        if not all([s3_access_key, s3_secret_key, s3_region, s3_bucket]):
+        if not all([s3_access_key, s3_secret_key, s3_region, s3_bucket, s3_endpoint]):
+            log_debug("S3 configuration is incomplete. S3 client will not be created")
             return None
 
         s3_client = boto3.client(
@@ -31,6 +34,7 @@ def get_s3_client() -> boto3.client:
             region_name=s3_region,
             aws_access_key_id=s3_access_key,
             aws_secret_access_key=s3_secret_key,
+            endpoint_url=s3_endpoint,
         )
 
         s3_bucket = s3_bucket
@@ -46,4 +50,8 @@ def get_s3_bucket() -> str | None:
     global s3_bucket
     if s3_bucket is None:
         s3_bucket = os.getenv("S3_BUCKET_NAME")
+
+        if not s3_bucket:
+            log_debug("S3 bucket name is not configured.")
+
     return s3_bucket

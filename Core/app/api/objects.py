@@ -8,6 +8,7 @@ from db.interfaces.objects import (
     update_object,
 )
 from fastapi import APIRouter, HTTPException, status
+from logger import log_debug, log_error, log_info
 from models.objects import (
     CreateObjectModel,
     DeleteObjectModel,

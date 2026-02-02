@@ -3,6 +3,7 @@ import json
 
 import bson
 import pymongo
+from logger import log_debug, log_error, log_info
 from models.objects import (
     CreateObjectModel,
     DeleteObjectModel,
@@ -15,11 +16,15 @@ from models.objects import (
 
 
 def create_object(obj: CreateObjectModel, conn: pymongo.MongoClient) -> None:
+    log_debug(
+        f"Creating object in MongoDB: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     db = conn[obj.module_name]
     collection = db[obj.collection_name]
     doc_id = obj.object_path.strip("/")
 
     if collection.find_one({"_id": doc_id}):
+        log_error(f"Object at {obj.object_path} already exists in MongoDB")
         raise Exception(f"Object at {obj.object_path} already exists")
 
     collection.insert_one(
@@ -33,16 +38,23 @@ def create_object(obj: CreateObjectModel, conn: pymongo.MongoClient) -> None:
 
 
 def delete_object(obj: DeleteObjectModel, conn: pymongo.MongoClient) -> None:
+    log_debug(
+        f"Deleting object in MongoDB: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     db = conn[obj.module_name]
     collection = db[obj.collection_name]
     doc_id = obj.object_path.strip("/")
 
     result = collection.delete_one({"_id": doc_id})
     if result.deleted_count == 0:
+        log_error(f"Object at {obj.object_path} not found in MongoDB")
         raise Exception(f"Object at {obj.object_path} not found")
 
 
 def update_object(obj: UpdateObjectModel, conn: pymongo.MongoClient) -> None:
+    log_debug(
+        f"Updating object in MongoDB: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     db = conn[obj.module_name]
     collection = db[obj.collection_name]
     doc_id = obj.object_path.strip("/")
@@ -52,22 +64,30 @@ def update_object(obj: UpdateObjectModel, conn: pymongo.MongoClient) -> None:
         {"$set": {"content": obj.new_content, "updated_at": datetime.datetime.now()}},
     )
     if result.matched_count == 0:
+        log_error(f"Object at {obj.object_path} not found in MongoDB")
         raise Exception(f"Object at {obj.object_path} not found")
 
 
 def get_object(obj: GetObjectModel, conn: pymongo.MongoClient) -> dict:
+    log_debug(
+        f"Retrieving object from MongoDB: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     db = conn[obj.module_name]
     collection = db[obj.collection_name]
     doc_id = obj.object_path.strip("/")
 
     doc = collection.find_one({"_id": doc_id})
     if not doc:
+        log_error(f"Object at {obj.object_path} not found in MongoDB")
         raise Exception(f"Object at {obj.object_path} not found")
     return doc
 
 
 def list_objects(obj: ListObjectsModel, conn: pymongo.MongoClient) -> list:
     """Lists all objects within a specific module (DB) and collection."""
+    log_debug(
+        f"Listing objects in MongoDB: module={obj.module_name}, collection={obj.collection_name}"
+    )
     db = conn[obj.module_name]
     collection = db[obj.collection_name]
 
@@ -81,6 +101,7 @@ def export_objects(obj: ExportObjectsModel, conn: pymongo.MongoClient) -> dict:
     Exports all collections from a specific module into one JSON string.
     Format: { "collection_1": [...], "collection_2": [...] }
     """
+    log_debug(f"Exporting objects from MongoDB module: {obj.module_name}")
     db = conn[obj.module_name]
     export_data = {}
 
@@ -111,6 +132,7 @@ def import_objects(obj: ImportObjectsModel, conn: pymongo.MongoClient) -> None:
     Imports a whole module's data.
     Collection names are derived automatically from the JSON dictionary keys.
     """
+    log_debug(f"Importing objects into MongoDB module: {obj.module_name}")
     # obj.content is already a dict thanks to Pydantic
     data = obj.content
 

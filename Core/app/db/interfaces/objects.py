@@ -14,6 +14,7 @@ from db.s3.querries.objects import get_object as s3_get_object
 from db.s3.querries.objects import import_objects as s3_import_objects
 from db.s3.querries.objects import list_objects as s3_list_objects
 from db.s3.querries.objects import update_object as s3_update_object
+from logger import log_debug, log_error, log_info
 from models.objects import (
     CreateObjectModel,
     DeleteObjectModel,
@@ -26,6 +27,9 @@ from models.objects import (
 
 
 def create_object(obj: CreateObjectModel):
+    log_debug(
+        f"Starting creation for object: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -36,11 +40,14 @@ def create_object(obj: CreateObjectModel):
             s3_create_object(obj, s3_storage)
 
     except Exception as e:
-        print(f"Error creating object: {e}")
+        log_error(f"Error creating object: {str(e)}")
         raise e
 
 
 def delete_object(obj: DeleteObjectModel):
+    log_debug(
+        f"Starting deletion for object: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -51,11 +58,14 @@ def delete_object(obj: DeleteObjectModel):
             s3_delete_object(obj, s3_storage)
 
     except Exception as e:
-        print(f"Error deleting object: {e}")
+        log_error(f"Error deleting object: {str(e)}")
         raise e
 
 
 def update_object(obj: UpdateObjectModel):
+    log_debug(
+        f"Starting update for object: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -66,11 +76,14 @@ def update_object(obj: UpdateObjectModel):
             s3_update_object(obj, s3_storage)
 
     except Exception as e:
-        print(f"Error updating object: {e}")
+        log_error(f"Error updating object: {str(e)}")
         raise e
 
 
 def get_object(obj: GetObjectModel):
+    log_debug(
+        f"Starting retrieval for object: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -83,13 +96,16 @@ def get_object(obj: GetObjectModel):
             content = s3_get_object(obj, s3_storage)
 
     except Exception as e:
-        print(f"Error getting object: {e}")
+        log_error(f"Error getting object: {str(e)}")
         raise e
 
     return content
 
 
 def list_objects(obj: ListObjectsModel):
+    log_debug(
+        f"Starting to list objects: module={obj.module_name}, collection={obj.collection_name}, prefix={obj.prefix}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -102,13 +118,16 @@ def list_objects(obj: ListObjectsModel):
             objects = s3_list_objects(obj, s3_storage)
 
     except Exception as e:
-        print(f"Error listing objects: {e}")
+        log_error(f"Error listing objects: {str(e)}")
         raise e
 
     return objects
 
 
 def export_objects(obj: ExportObjectsModel):
+    log_debug(
+        f"Starting to export objects: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -121,13 +140,16 @@ def export_objects(obj: ExportObjectsModel):
             objects = s3_export_objects(obj, s3_storage)
 
     except Exception as e:
-        print(f"Error exporting objects: {e}")
+        log_error(f"Error exporting objects: {str(e)}")
         raise e
 
     return objects
 
 
 def import_objects(objects: ImportObjectsModel):
+    log_debug(
+        f"Starting to import objects into module={objects.module_name}, collection={objects.collection_name}"
+    )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -138,5 +160,5 @@ def import_objects(objects: ImportObjectsModel):
             s3_import_objects(objects, s3_storage)
 
     except Exception as e:
-        print(f"Error importing objects: {e}")
+        log_error(f"Error importing objects: {str(e)}")
         raise e
