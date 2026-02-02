@@ -98,8 +98,8 @@ def list_objects(obj: ListObjectsModel, conn: pymongo.MongoClient) -> list:
 
 def export_objects(obj: ExportObjectsModel, conn: pymongo.MongoClient) -> dict:
     """
-    Exports all collections from a specific module into one JSON string.
-    Format: { "collection_1": [...], "collection_2": [...] }
+    Exports all collections from a specific module.
+    Format: { "module_name": "...", "content": { "collection_1": [...], "collection_2": [...] } }
     """
     log_debug(f"Exporting objects from MongoDB module: {obj.module_name}")
     db = conn[obj.module_name]
@@ -124,7 +124,7 @@ def export_objects(obj: ExportObjectsModel, conn: pymongo.MongoClient) -> dict:
 
         export_data[col_name] = docs
 
-    return export_data
+    return {"module_name": obj.module_name, "content": export_data}
 
 
 def import_objects(obj: ImportObjectsModel, conn: pymongo.MongoClient) -> None:

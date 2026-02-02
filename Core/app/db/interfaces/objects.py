@@ -104,7 +104,7 @@ def get_object(obj: GetObjectModel):
 
 def list_objects(obj: ListObjectsModel):
     log_debug(
-        f"Starting to list objects: module={obj.module_name}, collection={obj.collection_name}, prefix={obj.prefix}"
+        f"Starting to list objects: module={obj.module_name}, collection={obj.collection_name}"
     )
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
@@ -125,9 +125,7 @@ def list_objects(obj: ListObjectsModel):
 
 
 def export_objects(obj: ExportObjectsModel):
-    log_debug(
-        f"Starting to export objects: module={obj.module_name}, collection={obj.collection_name}, path={obj.object_path}"
-    )
+    log_debug(f"Starting to export objects: module={obj.module_name}")
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 
@@ -147,9 +145,7 @@ def export_objects(obj: ExportObjectsModel):
 
 
 def import_objects(objects: ImportObjectsModel):
-    log_debug(
-        f"Starting to import objects into module={objects.module_name}, collection={objects.collection_name}"
-    )
+    log_debug(f"Starting to import objects into module={objects.module_name}")
     s3_storage = get_s3_client()
     mongo_storage = get_mongo_client()
 

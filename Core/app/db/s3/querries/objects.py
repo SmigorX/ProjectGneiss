@@ -139,6 +139,10 @@ def list_objects(obj: ListObjectsModel, s3_client: boto3.client) -> list:
 
 
 def export_objects(obj: ExportObjectsModel, s3_client: boto3.client) -> dict:
+    """
+    Exports all collections from a specific module.
+    Format: { "module_name": "...", "content": { "collection_1": [...], "collection_2": [...] } }
+    """
     log_debug(f"Exporting objects from S3 for module: {obj.module_name}")
     bucket_name = get_s3_bucket()
     prefix = f"modules/{obj.module_name}/"
@@ -166,7 +170,7 @@ def export_objects(obj: ExportObjectsModel, s3_client: boto3.client) -> dict:
 
             export_data[col_name].append(doc)
 
-    return export_data
+    return {"module_name": obj.module_name, "content": export_data}
 
 
 def import_objects(obj: ImportObjectsModel, s3_client: boto3.client) -> None:
